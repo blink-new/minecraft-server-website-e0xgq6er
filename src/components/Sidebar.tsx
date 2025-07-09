@@ -1,23 +1,70 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, ShoppingCart, Gem, Star } from 'lucide-react'
+import { Home, ShoppingCart, Gem, Star, LogOut } from 'lucide-react'
+import { useState } from 'react'
+import { useMinecraftProfile } from '../hooks/useMinecraftProfile'
 
 const Sidebar = () => {
   const location = useLocation()
-
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/shop', icon: ShoppingCart, label: 'Ranks' }, // Assuming Ranks is the shop
-    { href: '/coins', icon: Gem, label: 'Coins' }, // Placeholder for coins page
+    { href: '/shop', icon: ShoppingCart, label: 'Ranks' },
+    { href: '/coins', icon: Gem, label: 'Coins' },
   ]
 
+  // Minecraft login state
+  const profile = useMinecraftProfile()
+  const [input, setInput] = useState("")
+
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col p-6 border-r border-gray-700">
-      <div className="flex items-center gap-4 mb-10">
-        <img src="/avatar.png" alt="Guest Avatar" className="w-12 h-12 rounded-full bg-gray-700" />
-        <div>
-          <p className="font-semibold text-lg">Guest</p>
-          <button className="text-sm text-cyan-400 hover:underline">Login</button>
-        </div>
+    <div className="w-64 bg-gray-900 text-white flex flex-col p-6 border-r border-gray-700 min-h-screen">
+      <div className="flex flex-col items-center gap-4 mb-10">
+        {profile.ign ? (
+          <>
+            <img
+              src={profile.skinUrl}
+              alt={profile.ign + "'s skin"}
+              className="w-16 h-16 rounded-lg bg-gray-700 border-2 border-cyan-400 shadow"
+              onError={e => (e.currentTarget.src = '/avatar.png')}
+            />
+            <div className="text-center">
+              <p className="font-semibold text-lg break-all">{profile.ign}</p>
+              <button
+                className="text-xs text-gray-400 hover:text-cyan-400 flex items-center gap-1 mt-1"
+                onClick={profile.logout}
+              >
+                <LogOut size={14} /> Logout
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <img src="/avatar.png" alt="Guest Avatar" className="w-16 h-16 rounded-lg bg-gray-700" />
+            <form
+              className="w-full flex flex-col gap-2"
+              onSubmit={e => {
+                e.preventDefault()
+                if (input.trim()) profile.fetchSkin(input.trim())
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Enter Minecraft IGN"
+                className="px-3 py-2 rounded bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-cyan-400 text-sm"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                autoComplete="username"
+              />
+              <button
+                type="submit"
+                className="bg-cyan-500 hover:bg-cyan-400 text-white rounded px-3 py-1 text-sm font-semibold transition"
+                disabled={profile.loading}
+              >
+                {profile.loading ? 'Loading...' : 'Login'}
+              </button>
+              {profile.error && <span className="text-xs text-red-400">{profile.error}</span>}
+            </form>
+          </>
+        )}
       </div>
 
       <nav className="flex flex-col gap-4">
